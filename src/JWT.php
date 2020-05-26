@@ -101,8 +101,12 @@ class JWT
     public function refresh($forceForever = false, $resetClaims = false)
     {
         $this->requireToken();
-
-        return $this->manager->customClaims($this->getCustomClaims())
+        $this->manager->setRefreshFlow();
+        if(!$user=$this->authentication())
+        {
+            throw new UnauthorizedHttpException('jwt-auth','User not found');
+        }
+        return $this->manager->customClaims($this->getClaimsArray())
                              ->refresh($this->token, $forceForever, $resetClaims)
                              ->get();
     }
@@ -181,7 +185,7 @@ class JWT
      */
     public function parseToken()
     {
-        if (! $token = $this->parser->parseToken()) {
+        if (!$token = $this->parser->parseToken()) {
             throw new JWTException('The token could not be parsed from the request');
         }
 
@@ -327,7 +331,7 @@ class JWT
      */
     protected function requireToken()
     {
-        if (! $this->token) {
+        if (!$this->token) {
             throw new JWTException('A token is required');
         }
     }
